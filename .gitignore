@@ -1,0 +1,18 @@
+####active files####
+*.swp
+
+###ignore all rootfiles###
+*.root
+*.cxx
+*.pcm
+
+###ignore all objects and exes###
+*.o
+simulator
+srim_clean
+
+###ignore pics####
+*.png
+
+###dont ignore this file###
+!.gitignore
