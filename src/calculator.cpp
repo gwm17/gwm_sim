@@ -1,21 +1,11 @@
 #include "calculator.h"
+#include "nucFuncs.h"
 
 using namespace std;
 
-calculator::calculator(Float_t mb, Float_t mt, Float_t mr, Float_t me, Float_t mbr1, 
-                       Float_t mbr2, Float_t rxMin, Float_t rxMax) {
-  target.mass = mt;
-  beam.mass = mb;
-  eject.mass = me;
-  recoil.mass = mr;
-  break1.mass = mbr1;
-  break2.mass = mbr2;
-  minEx = rxMin;
-  maxEx = rxMax;
-
+calculator::calculator() {
   random = new TRandom3();
   random->SetSeed();
-
 }
 
 calculator::~calculator() {
@@ -25,21 +15,32 @@ calculator::~calculator() {
   delete break2_eloss;
   delete random;
 }
+void calculator::SetParameters(Float_t mb, Float_t mt, Float_t mr, Float_t me, Float_t mbr1,
+                               Float_t mbr2, Float_t rxMin, Float_t rxMax) {
+  target.mass = mt;
+  beam.mass = mb;
+  eject.mass = me;
+  recoil.mass = mr;
+  break1.mass = mbr1;
+  break2.mass = mbr2;
+  minEx = rxMin;
+  maxEx = rxMax;
+}
 
-void calculator::ResetNucleus(nucleus &nuc) {
-  nuc.px = -1e6;
-  nuc.py = -1e6;
-  nuc.pz = -1e6;
-  nuc.p = -1e6;
-  nuc.E = -1e6;
-  nuc.KE = -1e6;
-  nuc.theta = -1e6;
-  nuc.phi = -1e6;
-  nuc.detID = -1;
-  nuc.wireID = -1;
-  nuc.SX3xyz.resize(0);
-  nuc.Q3xyz.resize(0);
-  nuc.PCxyz.resize(0);
+void calculator::ResetCalc() {
+  resetNucleus(beam,0); resetNucleus(target,0), resetNucleus(eject,0);
+  resetNucleus(recoil,0); resetNucleus(break1,0); resetNucleus(break2,0);
+  targ_LV.SetPxPyPzE(0.,0.,0.,0.);
+  beam_LV.SetPxPyPzE(0.,0.,0.,0.);
+  recoil_LV.SetPxPyPzE(0.,0.,0.,0.);
+  eject_LV.SetPxPyPzE(0.,0.,0.,0.);
+  break1_LV.SetPxPyPzE(0.,0.,0.,0.);
+  break2_LV.SetPxPyPzE(0.,0.,0.,0.);
+  x_rxn = -10;
+  y_rxn = -10;
+  z_rxn = -10;
+  minBeamKE = -10;
+  maxBeamKE = -10;
 }
 
 void calculator::InitializeBeam(Float_t minKE, Float_t maxKE) {
@@ -73,12 +74,15 @@ void calculator::Step1_CalcRxn() {
   TVector3 boost = parent_LV.BoostVector(); //use to shfit from lab to cm
   parent_LV.Boost(-boost); //send parent to cm for calc
   
-  Float_t ex = random->Uniform(minEx,maxEx);
+  //Float_t ex = random->Uniform(minEx,maxEx);
+  //cout<<"ex: "<<ex<<" emass: "<<eject.mass<<" rmass: "<<recoil.mass<<" pE: "<<parent_LV.E()<<endl;
   //Matches Maria method
-  Float_t E_ej_cm = (eject.mass*eject.mass - (recoil.mass+ex)*(recoil.mass+ex) +
-                     parent_LV.E()*parent_LV.E())/(2.0*parent_LV.E());
+  //Float_t E_ej_cm = (eject.mass*eject.mass - (recoil.mass+ex)*(recoil.mass+ex) +
+  //                   parent_LV.E()*parent_LV.E())/(2.0*parent_LV.E());
+  //Matches Nabin method:
+  Float_t E_ej_cm = eject.mass+random->Rndm()*(parent_LV.E()-recoil.mass-eject.mass);
   Float_t P_ej_cm = sqrt(E_ej_cm*E_ej_cm-eject.mass*eject.mass);
-  Float_t theta_ej_cm = random->Uniform(0.,TMath::Pi());
+  Float_t theta_ej_cm = acos(random->Uniform(-1.0,1.0));
   Float_t phi_ej_cm = random->Uniform(0.,2*TMath::Pi());
 
   eject_LV.SetPxPyPzE(P_ej_cm*sin(theta_ej_cm)*cos(phi_ej_cm),
@@ -90,6 +94,7 @@ void calculator::Step1_CalcRxn() {
   eject.E = eject_LV.E(); eject.p = sqrt(eject.E*eject.E-eject.mass*eject.mass);
   eject.px = eject_LV.Px(); eject.py = eject_LV.Py(); eject.pz = eject_LV.Pz();
   eject.theta = eject_LV.Theta(); eject.phi = eject_LV.Phi(); eject.KE = eject.E-eject.mass;
+  eject.theta_cm = theta_ej_cm; eject.phi_cm = phi_ej_cm;
   //Lorentz vector returns phi from -pi to pi; need 0 to 2pi
   if(eject.phi<0) {
     eject.phi += 2*TMath::Pi();
@@ -110,15 +115,18 @@ void calculator::Step1_CalcRxn() {
 }
 
 bool calculator::Step2_CalcBreakup() {
-  Float_t theta_br1_cm = random->Uniform(0.0, TMath::Pi());
+  Float_t theta_br1_cm = acos(random->Uniform(-1.0, 1.0));
   Float_t phi_br1_cm = random->Uniform(0.0, 2.0*TMath::Pi());
  
   TVector3 boost = recoil_LV.BoostVector();
   recoil_LV.Boost(-boost); //send recoil to cm frame for calc
-
+  
   Double_t E_br1_cm = (break1.mass*break1.mass-break2.mass*break2.mass+
                        recoil_LV.E()*recoil_LV.E())/(2.0*recoil_LV.E());
   Double_t P_br1_cm = sqrt(E_br1_cm*E_br1_cm-break1.mass*break1.mass);
+  if(recoil.Ex+recoil.mass < break1.mass+break2.mass) {
+    return false;
+  }
 
   break1_LV.SetPxPyPzE(P_br1_cm*sin(theta_br1_cm)*cos(phi_br1_cm),
                        P_br1_cm*sin(theta_br1_cm)*sin(phi_br1_cm),
@@ -130,6 +138,7 @@ bool calculator::Step2_CalcBreakup() {
   break1.pz = break1_LV.Pz(); break1.theta = break1_LV.Theta(); break1.phi = break1_LV.Phi();
   break1.KE = break1_LV.E()-break1.mass; 
   break1.p = sqrt(break1.E*break1.E-break1.mass*break1.mass);
+  break1.theta_cm = theta_br1_cm; break1.phi_cm = phi_br1_cm;
   if(break1.phi<0) {
     break1.phi += 2*TMath::Pi();
   }
@@ -141,6 +150,10 @@ bool calculator::Step2_CalcBreakup() {
   break2.pz = break2_LV.Pz(); break2.theta = break2_LV.Theta(); break2.phi = break2_LV.Phi();
   break2.KE = break2_LV.E()-break2.mass; 
   break2.p = sqrt(break2.E*break2.E-break2.mass*break2.mass);
+  break2_LV.Boost(-boost);
+  break2.theta_cm = break2_LV.Theta();
+  break2.phi_cm = break2_LV.Phi();
+  break2_LV.Boost(boost);
   if(break2.phi<0) {
     break2.phi += 2*TMath::Pi();
   }

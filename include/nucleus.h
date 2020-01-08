@@ -10,7 +10,10 @@ struct nucleus {
   /***Sim variables***/
   Float_t mass = -1.0, px = -1e6, py = -1e6, pz = -1e6, p = -1e6;
   Float_t E = -1e6, KE = -1e6, Ex = -1.0;
-  Float_t theta = -1e6, phi = -1e6;
+  Float_t Ecm = -1e6;
+  Float_t a2_mass_sq = -1.0, ap_mass_sq = -1.0;
+  Float_t theta = -1e6, phi = -1e6, theta_cm = -1e6, phi_cm = -1e6;
+  Float_t eject_theta_cm = -1e6;
   Int_t detID = -1;
   Int_t wireID = -1;
   vector<Float_t> SX3xyz, PCxyz, Q3xyz;

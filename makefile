@@ -14,11 +14,12 @@ DICT=$(SRCDIR)sim_dict.cxx
 LIB= $(OBJDIR)sim_dict.o
 EXE= simulator
 SRIM_EXE= srim_clean
+DRAW_EXE= draw
 
 
 .PHONY: all clean
 
-all: $(EXE) $(SRIM_EXE)
+all: $(EXE) $(SRIM_EXE) $(DRAW_EXE)
 
 $(EXE): $(LIB) $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
@@ -35,6 +36,7 @@ $(OBJDIR)%.o: $(SRCDIR)%.cpp
 
 $(SRIM_EXE): $(SRIMDIR)SRIMscript.cpp
 	$(CC) -o $@ $^
-
+$(DRAW_EXE): trackDraw.cpp $(SRCDIR)BadDetectorList.cpp $(SRCDIR)SX3.cpp $(SRCDIR)QQQ.cpp $(DICT)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^
 clean:
 	$(RM) $(OBJS) $(LIB) $(EXE) $(DICT) *.pcm

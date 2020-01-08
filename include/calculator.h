@@ -22,10 +22,11 @@ using namespace std;
 class calculator {
 
   public:
-    calculator(Float_t mb, Float_t mt, Float_t mr, Float_t me, Float_t mbr1, Float_t mbr2,
-               Float_t rxMin, Float_t rxMax);
+    calculator(),
     ~calculator();
-    void ResetNucleus(nucleus &nuc);
+    void SetParameters(Float_t mb, Float_t mt, Float_t mr, Float_t me, Float_t mbr1,
+                       Float_t mbr2, Float_t rxMin, Float_t rxMax);
+    void ResetCalc();
     void InitializeBeam(Float_t minKE, Float_t maxKE);
     bool GetSX3Coords(nucleus &nuc);
     bool GetQ3Coords(nucleus &nuc);

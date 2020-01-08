@@ -32,13 +32,14 @@ class simulation {
                             int binsY,double lowY,double highY,double valueY); 
     void GetReactions(string listName);
     void initEloss();
-    void resetNucleus(nucleus &nuc);
-    void resetNucleus(track &tr);
-    void resetNucleus(rcNucleus &rc);
     void resetNuclei();
+    void getCut();
     Int_t Go2StepCalc(calculator &calc, Int_t nparticles);
     Int_t Go1StepCalc(calculator &calc, Int_t nparticles);
     void getDalitzEff();
+    void getAngDistEff();
+    void getSingleChanEff();
+    void getMixedEff();
 
     /********Reaction Parameters********/
     vector<Float_t> mt, mb, mr, me, mbr1, mbr2, rxMax, rxMin;
@@ -62,6 +63,8 @@ class simulation {
     Float_t z_rxn, x_rxn, y_rxn;
     TTree *outTree;
     THashTable *rootObj;
+    TCutG *be8Cut, *li5Cut;
+    TFile *be8file, *li5file;
 
 };
 

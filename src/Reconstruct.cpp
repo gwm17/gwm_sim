@@ -11,18 +11,13 @@
 #include "TLorentzVector.h"
 #include <iostream>
 #include "TMath.h"
+#include "nucFuncs.h"
 
 using namespace std;
 
 //Constructor
-Reconstruct::Reconstruct(nucleus bm,nucleus targ,nucleus ejt,nucleus rec,nucleus br1, nucleus br2)
+Reconstruct::Reconstruct()
 {
-  beam = bm;
-  target = targ;
-  eject = ejt;
-  recoil = rec;
-  break1 = br1;
-  break2 = br2;
   ELoss_eject = NULL;
   ELoss_break2 = NULL;
   ELoss_break1 = NULL;
@@ -33,6 +28,20 @@ Reconstruct::~Reconstruct() {
   delete ELoss_eject;
   delete ELoss_break1;
   delete ELoss_break2;
+}
+
+void Reconstruct::SetParams(nucleus bm,nucleus t,nucleus e,nucleus r,nucleus b1,nucleus b2) {
+  beam = bm;
+  target = t;
+  recoil = r;
+  eject = e;
+  break1 = b1;
+  break2 = b2;
+}
+
+void Reconstruct::ResetRC() {
+  resetNucleus(beam,1); resetNucleus(target,1); resetNucleus(recoil,1);
+  resetNucleus(eject,1); resetNucleus(break1,1); resetNucleus(break2,1); 
 }
 
 /*Elastic()

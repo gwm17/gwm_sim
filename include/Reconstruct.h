@@ -29,11 +29,13 @@ class Reconstruct {
     const float maxBeamKE = 17.19;
 
     /********Construction Area********/
-    Reconstruct(nucleus bm, nucleus targ, nucleus ejt, nucleus rec, nucleus br1, nucleus br2);
+    Reconstruct();
     ~Reconstruct();
 
     /*********Functions*************/
     //Double_t CalcElastic(Double_t &EnergyProj,Double_t &EjectTheta,Track Tr,Int_t c);
+    void SetParams(nucleus bm,nucleus t,nucleus e,nucleus r,nucleus b1,nucleus b2);
+    void ResetRC();
     void CalcRecoil(track trEject, rcNucleus &rec);
     void CalcRecoil_MultiParticle(track trEject, track trBr1, track trBr2, 
                                   rcNucleus &rec_qval,rcNucleus &rec);
